@@ -1,0 +1,103 @@
+services:
+  basket.api:
+    build:
+      context: C:\Users\omer.beden\source\repos\MicroserviceCourseUdemy\src
+      dockerfile: Services/Basket/Basket.API/Dockerfile
+    container_name: basket.api
+    depends_on:
+      basketdb:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      CacheSettings:ConnectionString: basketdb:6379
+    image: basketapi
+    ports:
+    - published: 8001
+      target: 80
+  basketdb:
+    container_name: basketdb
+    image: redis:alpine
+    ports:
+    - published: 6379
+      target: 6379
+    restart: always
+  catalog.api:
+    build:
+      context: C:\Users\omer.beden\source\repos\MicroserviceCourseUdemy\src
+      dockerfile: Services/Catalog/Catalog.API/Dockerfile
+    container_name: catalog.api
+    depends_on:
+      catalogdb:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DatabaseSettings:ConnectionString: mongodb://catalogdb:27017
+    image: catalogapi
+    ports:
+    - published: 8000
+      target: 80
+  catalogdb:
+    container_name: catalogdb
+    image: mongo
+    ports:
+    - published: 27017
+      target: 27017
+    restart: always
+    volumes:
+    - mongo_data:/data/db:rw
+  discount.api:
+    build:
+      context: C:\Users\omer.beden\source\repos\MicroserviceCourseUdemy\src
+      dockerfile: Services/Discount/Discount.API/Dockerfile
+    container_name: discount.api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DatabaseSettings:ConnectionString: Server=discountdb;Port=5432;Database=DiscountDb;User
+        Id=admin;Password=admin1234;
+    image: discountapi
+    ports:
+    - published: 8002
+      target: 80
+  discountdb:
+    container_name: discountdb
+    environment:
+      POSTGRES_DB: DiscountDb
+      POSTGRES_PASSWORD: admin1234
+      POSTGRES_USER: admin
+    image: postgres
+    ports:
+    - published: 5432
+      target: 5432
+    restart: always
+    volumes:
+    - postgres_data:/var/lib/postgresql/data/:rw
+  pgadmin:
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@aspnetrun.com
+      PGADMIN_DEFAULT_PASSWORD: admin1234
+    image: dpage/pgadmin4
+    ports:
+    - published: 5050
+      target: 80
+    restart: always
+    volumes:
+    - pgadmin_data:/root/.pgadmin:rw
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    ports:
+    - published: 8080
+      target: 8000
+    - published: 9000
+      target: 9000
+    restart: always
+    volumes:
+    - portainer_data:/data:rw
+    - /var/run/docker.sock:/var/run/docker.sock:rw
+version: '3.4'
+volumes:
+  mongo_data: {}
+  pgadmin_data: {}
+  portainer_data: {}
+  postgres_data: {}
